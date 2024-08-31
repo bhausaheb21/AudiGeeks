@@ -1,7 +1,9 @@
 // const User = require(
 const bcrypt = require('bcryptjs');
 const User = require('../models/User');
-const jwt = require('jsonwebtoken')
+const jwt = require('jsonwebtoken');
+const { getSalt, encryptPass, getToken } = require('../utils/AuthUtils');
+const { getOtp, sendOTP } = require('../utils/OTPService');
 
 
 
@@ -29,15 +31,60 @@ class AuthController {
                 error.status = 422;
                 throw error;
             }
-            console.log(req.body);
-            
-            const salt = await bcrypt.genSalt(12)
-            const hashpassword =await bcrypt.hash(password, salt)
+
+            const salt = await getSalt();
+            const hashpassword = await encryptPass(password, salt)
             const user = new User({ salt, first_name, last_name, role, mobile_no, alt_mob_no, email, pincode, address, password: hashpassword })
+
+            const { otp, otp_expiry } = getOtp();
+            user.otp = otp;
+            user.otp_expiry = otp_expiry;
             const newuser = await user.save();
-            return res.status(200).json({message : "Registration Successful ...!", _id : newuser._id}) 
+            await sendOTP(otp, user.email)
+            const payload = {
+                id: user._id,
+                email: newuser.email,
+                role: newuser.role,
+                first_name: newuser.first_name
+            };
+            const token = getToken(payload)
+            return res.status(200).json({ message: "Registration Successful ...!", _id: newuser._id, token })
         } catch (err) {
             return next(err)
+        }
+    }
+
+    static async verify(req, res, next) {
+        try {
+            const { email, id } = req.user;
+            const { otp } = req.body;
+            const user = await User.findById(id);
+            if (parseInt(otp) !== parseInt(user.otp)) {
+                const error = new Error("Invalid OTP")
+                error.status = 422;
+                throw error;
+            }
+
+            if (new Date() > user.otp_expiry) {
+                const error = new Error("OTP Expired")
+                error.status = 422;
+                throw error;
+            }
+
+            user.verified = true;
+            await user.save();
+
+            const payload = {
+                id: user._id,
+                email: user.email,
+                role: user.role,
+                verified: user.verified
+            }
+            const token = getToken(payload);
+            return res.status(200).json({ message: "Verification SUccessful", token })
+        }
+        catch (err) {
+            next(err)
         }
     }
 
@@ -51,29 +98,96 @@ class AuthController {
                 error.status = 404;
                 throw error;
             }
+            if (!user.verified) {
+                const error = new Error("You are not verified user");
+                error.status = 422;
+                throw error;
+            }
 
-            const match = bcrypt.compare(password, user.password);
-
+            const match = await bcrypt.compare(password, user.password);
+            // console.log(match)
             if (!match) {
                 const error = new Error("Wrong Password");
                 error.status = 422;
                 throw error;
             }
-            const token = jwt.sign({
+            const payload = {
+                id: user._id,
                 email: user.email,
                 role: user.role,
-                first_name: user.first_name
-            }, process.env.SECRET_KEY)
+                verified: user.verified
+            }
+            const token = getToken(payload)
             return res.status(200).json({ message: "Sign In successful", token, email: user.email })
         }
         catch (err) {
             next(err)
         }
+    }
 
+    static async ResetPassword(req, res, next) {
+        try {
+            const { email } = req.body;
+            const user = await User.findOne({ email: email });
 
+            if (!user) {
+                const error = new Error("Invalid Email");
+                error.status = 404;
+                throw error;
+            }
+            const { otp, otp_expiry } = getOtp()
+            user.otp = otp;
+            user.otp_expiry = otp_expiry;
+            await sendOTP(user.otp, email);
+            await user.save();
 
+            const payload = {
+                id: user._id,
+                email: user.email,
+                role: user.role,
+                first_name: user.first_name
+            };
+            const token = getToken(payload)
+
+            return res.status(200).json({ message: "OTP sent Successfully", token });
+
+        } catch (error) {
+            next(error)
+        }
+    }
+
+    static async Savepassword(req, res, next) {
+        try {
+            const { password, cpassword, otp } = req.body;
+            const { id } = req.user;
+            const user = await User.findById(id);
+
+            if (cpassword !== password) {
+                const error = new Error("Password and Confirm Passwords are Different");
+                error.status = 422;
+                throw error;
+            }
+            if (parseInt(otp) !== parseInt(user.otp)) {
+                const error = new Error("Invalid OTP");
+                error.status = 422;
+                throw error;
+            }
+            if (Date.now() > user.otp_expiry) {
+                const error = new Error("OTP Expired");
+                error.status = 410;
+                throw error;
+            }
+            const hashedpass = await encryptPass(password, user.salt);
+            user.password = hashedpass;
+            await user.save()
+            return res.status(201).json({ message: "Password Reset Successful" });
+        }
+        catch (err) {
+            next(err)
+        }
     }
 
 }
+
 
 module.exports = AuthController;

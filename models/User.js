@@ -45,6 +45,8 @@ const userModel = new mongoose.Schema({
         required: true
     },
     salt: String,
+    otp : Number,
+    otp_expiry : Date
 }, { timestamps: true })
 
 
