@@ -45,9 +45,24 @@ const userModel = new mongoose.Schema({
         required: true
     },
     salt: String,
-    otp : Number,
-    otp_expiry : Date
-}, { timestamps: true })
+    otp: Number,
+    otp_expiry: Date,
+}, {
+    timestamps: true,
+    toJSON: {
+        transform: (obj, ret) => {
+            delete ret._id;
+            delete ret.createdAt
+            delete ret.updatedAt
+            delete ret.salt
+            delete ret.otp
+            delete ret.password
+            delete ret.otp_expiry
+            delete ret.resettoken
+            delete ret.token_expiry
+        }
+    }
+})
 
 
 module.exports = mongoose.model('User', userModel)
