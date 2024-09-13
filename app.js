@@ -3,6 +3,7 @@ const cors = require('cors');
 require('dotenv').config()
 const mongoose = require('mongoose');
 const AuthRouter = require('./routes/AuthRoutes');
+const profileRouter = require('./routes/ProfileRoutes');
 
 const app = express();
 
@@ -14,6 +15,7 @@ app.get('/', (req, res) => {
 })
 
 app.use('/auth', AuthRouter)
+app.use('/profile',profileRouter)
 app.use((err, req, res, next) => {
     if (err.status) {
         return res.status(err.status).json({ message: err.message })
