@@ -2,6 +2,10 @@ const mongoose = require('mongoose')
 
 
 const userModel = new mongoose.Schema({
+    user_name: {
+        required: true,
+        type: String
+    },
     first_name: {
         type: String,
         required: true
@@ -12,7 +16,7 @@ const userModel = new mongoose.Schema({
     },
     role: {
         type: String,
-        enum: ['Audiophile', 'Tour Manager', 'Brand Manager', 'Admin'],
+        enum: ['Audiophile', 'Brand Manager', 'Admin'],
         default: 'Audiophile'
     },
     mobile_no: {
@@ -29,6 +33,9 @@ const userModel = new mongoose.Schema({
     pincode: {
         type: Number
     },
+    // state :{
+    //     type : String
+    // }
     address: {
         type: String
     },
@@ -52,14 +59,15 @@ const userModel = new mongoose.Schema({
     toJSON: {
         transform: (obj, ret) => {
             delete ret._id;
-            delete ret.createdAt
-            delete ret.updatedAt
-            delete ret.salt
-            delete ret.otp
-            delete ret.password
-            delete ret.otp_expiry
-            delete ret.resettoken
-            delete ret.token_expiry
+            delete ret.createdAt;
+            delete ret.updatedAt;
+            delete ret.salt;
+            delete ret.otp;
+            delete ret.password;
+            delete ret.otp_expiry;
+            delete ret.resettoken;
+            delete ret.token_expiry;
+            delete ret.role;
         }
     }
 })

@@ -11,7 +11,7 @@ class AuthController {
 
     static async register(req, res, next) {
         try {
-            const { first_name, last_name, role, mobile_no, alt_mob_no, email, pincode, address, password, c_password } = req.body;
+            const { first_name, last_name, user_name, role, mobile_no, alt_mob_no, email, pincode, address, password, c_password } = req.body;
 
             const existing_user = await User.findOne({
                 $or: {
@@ -34,7 +34,7 @@ class AuthController {
 
             const salt = await getSalt();
             const hashpassword = await encryptPass(password, salt)
-            const user = new User({ salt, first_name, last_name, role, mobile_no, alt_mob_no, email, pincode, address, password: hashpassword })
+            const user = new User({ user_name, salt, first_name, last_name, role, mobile_no, alt_mob_no, email, pincode, address, password: hashpassword })
 
             const { otp, otp_expiry } = getOtp();
             user.otp = otp;
@@ -48,7 +48,7 @@ class AuthController {
                 first_name: newuser.first_name
             };
             const token = getToken(payload)
-            return res.status(200).json({ message: "Registration Successful ...!", _id: newuser._id, token })
+            return res.status(200).json({ message: "Email Sent Successfully", _id: newuser._id, token })
         } catch (err) {
             return next(err)
         }
@@ -91,7 +91,14 @@ class AuthController {
     static async login(req, res, next) {
         try {
             const { email, password } = req.body;
-            const user = await User.findOne({ email: email });
+            const user = await User.findOne({
+                $or: [
+                    { user_name: email },
+                    { email: email }     
+                ]
+            });
+            // console.log(user);
+
 
             if (!user) {
                 const error = new Error("Invalid Username");
@@ -105,12 +112,12 @@ class AuthController {
             }
 
             const match = await bcrypt.compare(password, user.password);
-            // console.log(match)
             if (!match) {
                 const error = new Error("Wrong Password");
                 error.status = 422;
                 throw error;
             }
+
             const payload = {
                 id: user._id,
                 email: user.email,
@@ -187,7 +194,24 @@ class AuthController {
         }
     }
 
-}
+    static async isValidUserName(req, res, next) {
+        try {
+            const { user_name } = req.body;
+            const user = await User.findOne({ user_name });
+            console.log(user);
 
+            if (user) {
+                const error = new Error("UserName already taken")
+                error.status = 422;
+                throw error;
+            }
+
+            return res.status(200).json({ message: "UserName Available" })
+
+        } catch (error) {
+            next(error)
+        }
+    }
+}
 
 module.exports = AuthController;
