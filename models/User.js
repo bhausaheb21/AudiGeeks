@@ -67,7 +67,7 @@ const userModel = new mongoose.Schema({
             delete ret.otp_expiry;
             delete ret.resettoken;
             delete ret.token_expiry;
-            delete ret.role;
+            // delete ret.role;
         }
     }
 })

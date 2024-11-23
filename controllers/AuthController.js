@@ -94,10 +94,9 @@ class AuthController {
             const user = await User.findOne({
                 $or: [
                     { user_name: email },
-                    { email: email }     
+                    { email: email }
                 ]
             });
-            // console.log(user);
 
 
             if (!user) {
@@ -125,7 +124,7 @@ class AuthController {
                 verified: user.verified
             }
             const token = getToken(payload)
-            return res.status(200).json({ message: "Sign In successful", token, email: user.email })
+            return res.status(200).json({ message: "Sign In successful", token, email: user.email , role : user.role})
         }
         catch (err) {
             next(err)
@@ -135,7 +134,12 @@ class AuthController {
     static async ResetPassword(req, res, next) {
         try {
             const { email } = req.body;
-            const user = await User.findOne({ email: email });
+            const user = await User.findOne({
+                $or: [
+                    { user_name: email },
+                    { email: email }
+                ]
+            });
 
             if (!user) {
                 const error = new Error("Invalid Email");
@@ -145,7 +149,7 @@ class AuthController {
             const { otp, otp_expiry } = getOtp()
             user.otp = otp;
             user.otp_expiry = otp_expiry;
-            await sendOTP(user.otp, email);
+            await sendOTP(user.otp, user.email);
             await user.save();
 
             const payload = {
@@ -201,12 +205,12 @@ class AuthController {
             console.log(user);
 
             if (user) {
-                const error = new Error("UserName already taken")
+                const error = new Error("Username already taken")
                 error.status = 422;
                 throw error;
             }
 
-            return res.status(200).json({ message: "UserName Available" })
+            return res.status(200).json({ message: "Username Available" })
 
         } catch (error) {
             next(error)

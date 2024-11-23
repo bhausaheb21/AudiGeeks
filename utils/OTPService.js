@@ -1,5 +1,5 @@
-// const { OTP } = require(".");
-// const { transporter } = require("./Transporter");
+require('dotenv').config({ path: '../.env' });
+
 const nodemailer = require('nodemailer');
 
 const transporter = nodemailer.createTransport({
