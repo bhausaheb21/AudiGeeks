@@ -1,5 +1,6 @@
 
 const express = require('express');
+// const { getPayload } = require('../AuthUtils');
 const AuthController = require('../controllers/AuthController');
 const { getPayload } = require('../utils/AuthUtils');
 
@@ -10,6 +11,7 @@ router.post('/login', AuthController.login);
 router.post('/register', AuthController.register);
 router.post('/reset_password', AuthController.ResetPassword);
 router.post('/verify_username', AuthController.isValidUserName);
+router.get('/verifyemail/:token', AuthController.verifyemail);
 
 
 

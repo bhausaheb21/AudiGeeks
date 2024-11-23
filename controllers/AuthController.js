@@ -1,9 +1,12 @@
 // const User = require(
 const bcrypt = require('bcryptjs');
+
+const crypto = require('crypto')
 const User = require('../models/User');
+const path = require('path')
 const jwt = require('jsonwebtoken');
 const { getSalt, encryptPass, getToken } = require('../utils/AuthUtils');
-const { getOtp, sendOTP } = require('../utils/OTPService');
+const { getOtp, sendOTP, sendOTP2 } = require('../utils/OTPService');
 
 
 
@@ -11,7 +14,7 @@ class AuthController {
 
     static async register(req, res, next) {
         try {
-            const { first_name, last_name, user_name, role, mobile_no, alt_mob_no, email, pincode, address, password, c_password } = req.body;
+            const { first_name, last_name, role, mobile_no, alt_mob_no, email, pincode, address, password, c_password } = req.body;
 
             const existing_user = await User.findOne({
                 $or: {
@@ -34,22 +37,16 @@ class AuthController {
 
             const salt = await getSalt();
             const hashpassword = await encryptPass(password, salt)
-            const user = new User({ user_name, salt, first_name, last_name, role, mobile_no, alt_mob_no, email, pincode, address, password: hashpassword })
-
-            const { otp, otp_expiry } = getOtp();
-            user.otp = otp;
-            user.otp_expiry = otp_expiry;
+            const user = new User({salt, first_name, last_name, role, mobile_no, alt_mob_no, email, pincode, address, password: hashpassword })
+            const buffer = crypto.randomBytes(32);
+            const token = buffer.toString('hex');
+            user.token = token;
+            await sendOTP2(token, email, user.first_name);
             const newuser = await user.save();
-            await sendOTP(otp, user.email)
-            const payload = {
-                id: user._id,
-                email: newuser.email,
-                role: newuser.role,
-                first_name: newuser.first_name
-            };
-            const token = getToken(payload)
-            return res.status(200).json({ message: "Email Sent Successfully", _id: newuser._id, token })
+            return res.status(200).json({ message: "Email sent successfully" })
         } catch (err) {
+            console.log(err);
+            
             return next(err)
         }
     }
@@ -93,7 +90,7 @@ class AuthController {
             const { email, password } = req.body;
             const user = await User.findOne({
                 $or: [
-                    { user_name: email },
+                    // { user_name: email },
                     { email: email }
                 ]
             });
@@ -124,7 +121,7 @@ class AuthController {
                 verified: user.verified
             }
             const token = getToken(payload)
-            return res.status(200).json({ message: "Sign In successful", token, email: user.email , role : user.role})
+            return res.status(200).json({ message: "Sign In successful", token, email: user.email, role: user.role })
         }
         catch (err) {
             next(err)
@@ -216,6 +213,40 @@ class AuthController {
             next(error)
         }
     }
+
+    static async verifyemail(req, res, next) {
+
+        const { token } = req.params;
+        try {
+            const { token } = req.params;
+
+            const user = await User.findOne({token});
+            if(!user){
+                const error = new Error("Page not Found")
+                error.status = 404;
+                throw error;
+            }
+
+            user.verified = true;
+
+            await user.save();
+
+            console.log(path.join(__dirname, '..'));
+
+            
+            return res.sendFile(path.join(__dirname, '..','public/verification-success.html'));
+        }
+        catch (err) {
+            console.log(err);
+            
+            next(err)
+        }
+        // const user = 
+
+
+
+    }
+
 }
 
 module.exports = AuthController;

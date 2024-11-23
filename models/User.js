@@ -2,10 +2,10 @@ const mongoose = require('mongoose')
 
 
 const userModel = new mongoose.Schema({
-    user_name: {
-        required: true,
-        type: String
-    },
+    // user_name: {
+    //     required: true,
+    //     type: String
+    // },
     first_name: {
         type: String,
         required: true
@@ -54,6 +54,7 @@ const userModel = new mongoose.Schema({
     salt: String,
     otp: Number,
     otp_expiry: Date,
+    token: String
 }, {
     timestamps: true,
     toJSON: {
@@ -65,8 +66,8 @@ const userModel = new mongoose.Schema({
             delete ret.otp;
             delete ret.password;
             delete ret.otp_expiry;
-            delete ret.resettoken;
-            delete ret.token_expiry;
+            // delete ret.resettoken;
+            // delete ret.token_expiry;
             // delete ret.role;
         }
     }
