@@ -113,7 +113,7 @@ function createVerification(name, token) {
         <div class="content">
             <p>Welcome ${name},</p>
             <p>Thank you for registering! Please verify your email address by clicking the button below:</p>
-            <a href="http://localhost:2103/auth/verifyemail/${token}" class="button">Verify Email</a>
+            <a href="https://audiogeeks.onrender.com/auth/verifyemail/${token}" class="button">Verify Email</a>
             <p>If you did not sign up for this account, please ignore this email.</p>
         </div>
         <div class="footer">
