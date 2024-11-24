@@ -4,6 +4,7 @@ require('dotenv').config()
 const mongoose = require('mongoose');
 const AuthRouter = require('./routes/AuthRoutes');
 const profileRouter = require('./routes/ProfileRoutes');
+const adminRouter = require('./routes/adminRoutes');
 
 const app = express();
 
@@ -15,7 +16,10 @@ app.get('/', (req, res) => {
 })
 
 app.use('/auth', AuthRouter)
-app.use('/profile',profileRouter)
+app.use('/profile', profileRouter)
+app.use('/admin', adminRouter)
+
+
 app.use((err, req, res, next) => {
     if (err.status) {
         return res.status(err.status).json({ message: err.message })
@@ -23,12 +27,13 @@ app.use((err, req, res, next) => {
     return res.status(404).json({ message: err.message })
 })
 
-mongoose.connect(process.env.DATABASE_URL).then(res => {
-    app.listen(process.env.PORT, () => {
-        console.clear()
-        console.log("Server Started.........");
+mongoose.connect(process.env.DATABASE_URL)
+    .then(res => {
+        app.listen(process.env.PORT, () => {
+            console.clear()
+            console.log("Server Started.........");
+        })
     })
-})
     .catch(err => {
         console.log("Server failed");
         console.log(err.message);

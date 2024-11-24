@@ -1,6 +1,6 @@
 const User = require("../models/User");
 
-class Profile {
+class ProfileController {
     static async getMyProfile(req, res, next) {
         try {
             const { id } = req.user;
@@ -22,16 +22,58 @@ class Profile {
             profile.address = address;
 
             const updatedprofile = await profile.save();
-            return res.status(201).json({message : "Updated Successfully", profile : updatedprofile})
+            return res.status(201).json({ message: "Updated Successfully", profile: updatedprofile })
 
         } catch (err) {
             next(err)
         }
     }
 
-    static async updateProfile() {
+    static async getAllUsers(req, res, next) {
+        try {
+            const user = req.user;
+            if (!user) {
+                const error = new Error("Not authenticated")
+                error.status = 403;
+                throw error;
+            }
 
+            const users = await User.find();
+            // users[0].
+            return res.status(200).json({ message: "All users fetched successfully", users });
+        }
+        catch (err) {
+            next(err)
+        }
     }
+
+    static async deleteUser(req, res, next) {
+        try {
+            const user = req.user;
+
+            const { _id } = req.body;
+
+            if (!user) {
+                const error = new Error("Not authenticated")
+                error.status = 403;
+                throw error;
+            }
+
+            const result = await User.deleteOne({_id});
+
+            if(!result){
+                const error = new Error("Invalid User")
+                error.status = 404;
+                throw error;
+            }           
+            return res.status(200).json({ message: "User deleted successfully"});
+        }
+        catch (err) {
+            next(err)
+        }
+    }
+
+
 }
 
-module.exports = Profile;
+module.exports = ProfileController;

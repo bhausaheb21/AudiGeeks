@@ -1,10 +1,12 @@
 const express = require('express');
-const Profile = require('../controllers/ProfileController');
 const { isAuth } = require('../middlewares/isAuth');
+const ProfileController = require('../controllers/ProfileController');
 
 const router = express.Router()
 
 router.use(isAuth)
-router.get('/myprofile', Profile.getMyProfile)
-router.post('/editprofile', Profile.editProfile)
+router.get('/myprofile', ProfileController.getMyProfile)
+router.post('/editprofile', ProfileController.editProfile)
+
+
 module.exports = router;

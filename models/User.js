@@ -59,7 +59,7 @@ const userModel = new mongoose.Schema({
     timestamps: true,
     toJSON: {
         transform: (obj, ret) => {
-            delete ret._id;
+            // delete ret._id;
             delete ret.createdAt;
             delete ret.updatedAt;
             delete ret.salt;
