@@ -1,3 +1,4 @@
+const { default: mongoose } = require("mongoose");
 const User = require("../models/User");
 
 class ProfileController {
@@ -51,7 +52,15 @@ class ProfileController {
         try {
             const user = req.user;
 
+            console.log("request to delete");
+
+
             const { _id } = req.body;
+            if (new mongoose.Types.ObjectId(user.id) === new mongoose.Types.ObjectId(_id)) {
+                const error = new Error("Invalid Operation")
+                error.status = 403;
+                throw error;
+            }
 
             if (!user) {
                 const error = new Error("Not authenticated")
@@ -59,14 +68,15 @@ class ProfileController {
                 throw error;
             }
 
-            const result = await User.deleteOne({_id});
+            const result = await User.deleteOne({ _id });
+            // u
 
-            if(!result){
+            if (!result) {
                 const error = new Error("Invalid User")
                 error.status = 404;
                 throw error;
-            }           
-            return res.status(200).json({ message: "User deleted successfully"});
+            }
+            return res.status(200).json({ message: "User deleted successfully" });
         }
         catch (err) {
             next(err)
