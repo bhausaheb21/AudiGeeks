@@ -50,15 +50,23 @@ class ProfileController {
 
     static async deleteUser(req, res, next) {
         try {
-            const user = req.user;
+            const {id} = req.user;
 
             console.log("request to delete");
 
 
             const { _id } = req.body;
-            if (new mongoose.Types.ObjectId(user.id) === new mongoose.Types.ObjectId(_id)) {
+            if (new mongoose.Types.ObjectId(id) === new mongoose.Types.ObjectId(_id)) {
                 const error = new Error("Invalid Operation")
                 error.status = 403;
+                throw error;
+            }
+
+            const user = await User.findById(_id)
+
+            if(!user){
+                const error = new Error("User Not Found")
+                error.status = 404;
                 throw error;
             }
 
