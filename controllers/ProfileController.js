@@ -56,6 +56,10 @@ class ProfileController {
 
 
             const { _id } = req.body;
+            console.log(_id);
+            
+
+            
             if (new mongoose.Types.ObjectId(id) === new mongoose.Types.ObjectId(_id)) {
                 const error = new Error("Invalid Operation")
                 error.status = 403;
@@ -70,13 +74,16 @@ class ProfileController {
                 throw error;
             }
 
-            if (!user) {
+            if (id) {
                 const error = new Error("Not authenticated")
                 error.status = 403;
                 throw error;
             }
 
-            const result = await User.deleteOne({ _id });
+            const result = await User.findByIdAndDelete(_id);
+
+            console.log("Deleted");
+            
             // u
 
             if (!result) {
