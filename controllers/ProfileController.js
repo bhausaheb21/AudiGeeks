@@ -74,13 +74,15 @@ class ProfileController {
                 throw error;
             }
 
-            if (id) {
+            if (!id) {
                 const error = new Error("Not authenticated")
                 error.status = 403;
                 throw error;
             }
 
-            const result = await User.findByIdAndDelete(_id);
+            const result = await User.findByIdAndDelete(_id
+
+            );
 
             console.log("Deleted");
             
