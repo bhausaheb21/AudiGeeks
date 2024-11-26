@@ -11,7 +11,7 @@ adminRouter.use(isAuthAdmin);
 
 
 adminRouter.get('/all_users',ProfileController.getAllUsers )
-adminRouter.delete('/deleteuser',ProfileController.deleteUser )
+adminRouter.post('/deleteuser',ProfileController.deleteUser )
 
 
 module.exports = adminRouter;
